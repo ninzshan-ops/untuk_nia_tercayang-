@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>For Nia 🤍</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
+body{font-family:Arial,Helvetica,sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+#rain{z-index:0}
+#fx{z-index:1}
+#text{
+ position:fixed;z-index:2;inset:0;display:flex;align-items:center;justify-content:center;
+ text-align:center;pointer-events:none;padding:25px;
+}
+.message{
+ opacity:0;transform:scale(.65);
+ color:#d94f88;font-weight:900;line-height:.95;
+ text-shadow:0 0 8px #d94f88,0 0 25px #b8326f,0 0 55px #b8326f;
+ transition:opacity .7s ease,transform .9s cubic-bezier(.2,.8,.2,1);
+}
+.message.show{opacity:1;transform:scale(1)}
+.small{font-size:clamp(18px,5vw,34px);letter-spacing:4px}
+.big{font-size:clamp(45px,13vw,115px);letter-spacing:2px}
+.pink{color:#c83f79}
+.heart{font-size:clamp(90px,25vw,190px)}
+#start{
+ position:fixed;z-index:5;inset:0;display:grid;place-items:center;
+ background:#000;transition:opacity .8s;
+}
+#start button{
+ border:1px solid #d94f88;background:#17000b;color:#fff;padding:15px 25px;
+ border-radius:999px;font-size:16px;box-shadow:0 0 30px #b8326f55;cursor:pointer;
+}
+#start button:active{transform:scale(.95)}
+</style>
+</head>
+<body>
+
+<canvas id="rain"></canvas>
+<canvas id="fx"></canvas>
+<div id="text"><div id="msg" class="message"></div></div>
+
+<div id="start">
+  <button onclick="startShow()">Klik untuk melihat pesan 🤍</button>
+</div>
+
+<script>
+const rain=document.getElementById("rain");
+const fx=document.getElementById("fx");
+const r=rain.getContext("2d");
+const f=fx.getContext("2d");
+const msg=document.getElementById("msg");
+
+let W,H,D;
+function resize(){
+ D=Math.min(devicePixelRatio||1,2); W=innerWidth; H=innerHeight;
+ [rain,fx].forEach(cv=>{
+   cv.width=W*D;cv.height=H*D;cv.style.width=W+"px";cv.style.height=H+"px";
+ });
+ r.setTransform(D,0,0,D,0,0);
+ f.setTransform(D,0,0,D,0,0);
+ makeRain();
+}
+addEventListener("resize",resize);
+
+let drops=[];
+const chars="01LOVE♥♡ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+function makeRain(){
+ const size=Math.max(13,Math.min(19,W/55));
+ drops=Array.from({length:Math.ceil(W/size)},()=>Math.random()*H/size);
+}
+function rainLoop(){
+ r.fillStyle="rgba(0,0,0,.18)";
+ r.fillRect(0,0,W,H);
+ const size=Math.max(13,Math.min(19,W/55));
+ r.font=size+"px monospace";
+ drops.forEach((d,i)=>{
+   let y=d*size;
+   r.fillStyle=Math.random()>.88?"#ffc1dc":"#f58ab8aa";
+   r.fillText(chars[(Math.random()*chars.length)|0],i*size,y);
+   if(y>H&&Math.random()>.975)d=0;
+   drops[i]=d+.5+Math.random()*.7;
+ });
+ requestAnimationFrame(rainLoop);
+}
+
+let particles=[];
+function textParticles(text){
+ const off=document.createElement("canvas"),o=off.getContext("2d");
+ off.width=Math.min(1100,W*1.8);off.height=Math.min(420,H*.65);
+ const size=Math.max(45,Math.min(135,off.width/(text.length*.62)));
+ o.font=`900 ${size}px Arial`;
+ o.textAlign="center";o.textBaseline="middle";o.fillStyle="#fff";
+ o.fillText(text,off.width/2,off.height/2);
+ const data=o.getImageData(0,0,off.width,off.height).data;
+ particles=[];
+ const step=Math.max(3,Math.floor(off.width/250));
+ for(let y=0;y<off.height;y+=step){
+   for(let x=0;x<off.width;x+=step){
+     if(data[(y*off.width+x)*4+3]>120){
+       particles.push({
+         x:W/2+(Math.random()-.5)*W,
+         y:H/2+(Math.random()-.5)*H,
+         tx:x-off.width/2,ty:y-off.height/2,
+         s:.7+Math.random()*1.7
+       });
+     }
+   }
+ }
+}
+function particleLoop(){
+ f.clearRect(0,0,W,H);
+ particles.forEach(p=>{
+   p.x+=(W/2+p.tx-p.x)*.065;
+   p.y+=(H/2+p.ty-p.y)*.065;
+   f.beginPath();f.fillStyle="#d94f88";f.shadowBlur=10;f.shadowColor="#b8326f";
+   f.arc(p.x,p.y,p.s,0,Math.PI*2);f.fill();
+ });
+ f.shadowBlur=0;
+ requestAnimationFrame(particleLoop);
+}
+
+const sequence=[
+ {t:"HEY NIA...",cls:"small",ms:2200},
+ {t:"ADA SESUATU<br>BUAT KAMU 🤍",cls:"big",ms:2800},
+ {t:"I",cls:"big",ms:1100},
+ {t:"LOVE",cls:"big pink",ms:1400},
+ {t:"YOU",cls:"big",ms:1800},
+ {t:"I LOVE YOU",cls:"big pink",ms:2500},
+ {t:"SAYANG NIA 🤍",cls:"big pink",ms:3200},
+ {t:"NIA",cls:"heart",ms:2200},
+ {t:"KAMU ITU<br>SPESIAL BUAT AKU",cls:"small",ms:2700},
+ {t:"MUA ILSYM",cls:"small",ms:2700},
+ {t:"LOVE YOU<br>FOREVER 🤍",cls:"big pink",ms:3500},
+ {t:"🤍",cls:"heart",ms:3000}
+];
+
+let index=0,playing=false;
+function show(item){
+ msg.className="message";
+ msg.innerHTML=item.t;
+ void msg.offsetWidth;
+ msg.className="message "+item.cls+" show";
+
+ // particle version of the important messages
+ const plain=item.t.replace(/<br>/g," ").replace(/[🤍🥺]/g,"").trim();
+ if(plain.length>1) textParticles(plain);
+}
+function next(){
+ if(!playing)return;
+ const item=sequence[index];
+ show(item);
+ setTimeout(()=>{
+   msg.classList.remove("show");
+   setTimeout(()=>{
+     index=(index+1)%sequence.length;
+     next();
+   },450);
+ },item.ms);
+}
+function startShow(){
+ playing=true;
+ document.getElementById("start").style.opacity="0";
+ setTimeout(()=>document.getElementById("start").remove(),800);
+ index=0;next();
+}
+resize();
+rainLoop();
+particleLoop();
+</script>
+</body>
+  </html>
